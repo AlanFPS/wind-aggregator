@@ -1,0 +1,5 @@
+pydantic~=2.7
+boto3~=1.34
+imagehash~=4.3
+opencv-python-headless~=4.10
+Pillow~=10.3
