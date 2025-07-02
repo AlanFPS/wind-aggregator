@@ -1,6 +1,7 @@
 import json, uuid, logging
 from wind_agg.models import ClaimRequest
 from wind_agg.aggregate import process_claim
+from pydantic import ValidationError
 
 log = logging.getLogger()
 log.setLevel(logging.INFO)
@@ -17,11 +18,13 @@ def lambda_handler(event, context):
                         "X-Correlation-Id": corr_id},
             "body": result.model_dump_json()
         }
-    except ValueError as ve:
+    except (ValidationError, ValueError) as ve:
         log.warning("%s input error: %s", corr_id, ve)
-        return {"statusCode": 422,
-                "body": json.dumps({"detail": str(ve),
-                                    "correlation_id": corr_id})}
+        return {
+            "statusCode": 422,
+            "body": json.dumps({"detail": str(ve),
+                                "correlation_id": corr_id})
+        }
     except Exception as ex:
         log.exception("%s unhandled", corr_id)
         return {"statusCode": 500,
