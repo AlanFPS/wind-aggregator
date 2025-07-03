@@ -21,6 +21,8 @@ provider "aws" {
   region  = var.aws_region
 }
 
+provider "archive" {}
+
 # ---- package Lambda --------------------------------------------------------
 data "archive_file" "lambda_zip" {
   type        = "zip"
@@ -70,6 +72,7 @@ resource "aws_lambda_function" "agg" {
   runtime       = "python3.11"
   handler       = "wind_agg.handler.lambda_handler"
   filename      = data.archive_file.lambda_zip.output_path
+  source_code_hash = data.archive_file.lambda_zip.output_base64sha256
 
   timeout      = 60
   memory_size  = 1024

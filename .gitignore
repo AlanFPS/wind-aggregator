@@ -1,1 +1,27 @@
 .venv/
+
+# --- Lambda vendored packages ---
+/src/**/__pycache__/
+/src/**/*.dist-info/
+/src/**/*.libs/
+/src/PIL/
+/src/numpy/
+/src/pywt/
+/src/pydantic*/
+/src/boto3/
+/src/imagehash/
+/src/typing_*/         # extensions / inspection
+/src/bin/
+/src/six.py
+temp_linux/
+/src/annotated_types*/
+/src/typing_extensions.py
+/src/typing_inspection*/
+/src/images/
+
+# --- build artifacts ---
+/iac/lambda.zip
+
+# --- TF state ---
+/iac/terraform.tfstate
+/iac/terraform.tfstate.*
