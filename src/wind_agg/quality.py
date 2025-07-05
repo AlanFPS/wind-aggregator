@@ -8,8 +8,8 @@ from typing import Tuple
 from PIL import Image, ImageFilter
 import numpy as np
 
-BLUR_THRESHOLD   = 1000.0   # tweak as needed
-BRIGHT_THRESHOLD = 30       # 0–255
+BLUR_THRESHOLD   = 100.0   # tweak as needed
+BRIGHT_THRESHOLD = 5       # 0–255
 
 def assess_quality(pil: Image.Image) -> Tuple[bool, float]:
     gray = pil.convert("L")

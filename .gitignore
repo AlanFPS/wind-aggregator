@@ -25,3 +25,18 @@ temp_linux/
 # --- TF state ---
 /iac/terraform.tfstate
 /iac/terraform.tfstate.*
+/iac/.terraform/
+/iac/**/terraform-provider-*.exe
+
+# --- Lambda layer output ---
+/layer/
+/layer.zip
+
+# --- Extra vendored libs ---
+/src/dateutil/
+/src/jmespath/
+/src/urllib3/
+
+# --- Ad-hoc test artifacts ---
+/test.jpg
+/test/sample_response.json

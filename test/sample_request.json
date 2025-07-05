@@ -1,0 +1,9 @@
+{
+  "claim_id": "demo-001",
+  "loss_type": "wind",
+  "images": [
+    "https://windimages.s3.us-east-2.amazonaws.com/damaged_roof_1.jpg",
+    "https://windimages.s3.us-east-2.amazonaws.com/damaged_roof_2.jpg",
+    "https://windimages.s3.us-east-2.amazonaws.com/garage_damage.jpg"
+  ]
+}

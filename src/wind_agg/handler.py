@@ -2,6 +2,8 @@ import json, uuid, logging
 from wind_agg.models import ClaimRequest
 from wind_agg.aggregate import process_claim
 from pydantic import ValidationError
+import logging
+logging.basicConfig(level=logging.INFO)
 
 log = logging.getLogger()
 log.setLevel(logging.INFO)

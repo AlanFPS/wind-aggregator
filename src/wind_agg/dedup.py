@@ -16,7 +16,7 @@ from PIL import Image
 HAMMING_THRESHOLD = 5   # smaller = stricter dedup
 
 def _phash(img: Image.Image) -> imagehash.ImageHash:
-    return imagehash.phash(img, hash_size=16)
+    return imagehash.dhash(img, hash_size=16)
 
 def filter_near_dupes(url_to_info: Dict[str, dict]) -> Tuple[List[str], List[List[str]]]:
     hash_to_urls: Dict[str, List[str]] = defaultdict(list)
@@ -28,7 +28,6 @@ def filter_near_dupes(url_to_info: Dict[str, dict]) -> Tuple[List[str], List[Lis
     keep_urls, clusters = [], []
     for urls in hash_to_urls.values():
         clusters.append(urls)
-        # choose highest-quality in this bucket
         best = max(urls, key=lambda u: url_to_info[u]["quality"])
         keep_urls.append(best)
 

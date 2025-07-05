@@ -6,6 +6,8 @@ import tempfile, urllib.request, uuid, os, logging, statistics, datetime
 from typing import Dict, List
 
 from PIL import Image
+from PIL import ImageFilter
+import numpy as np
 import boto3
 
 from .quality import assess_quality
@@ -40,6 +42,13 @@ def process_claim(req: ClaimRequest, corr_id: str) -> ClaimResponse:
             continue
 
         keep, qscore = assess_quality(pil)
+        # Debug quality info
+        gray = pil.convert("L")
+        edges = gray.filter(ImageFilter.FIND_EDGES)
+        lap_var = float(np.var(edges))
+        bright = float(np.mean(gray))
+        log.info("%s quality check %s: blur=%.2f bright=%.2f → keep=%s", corr_id, url, lap_var, bright, keep)
+
         if not keep:
             discarded += 1
             continue
@@ -103,4 +112,4 @@ def process_claim(req: ClaimRequest, corr_id: str) -> ClaimResponse:
         confidence=confidence,
         generated_at=datetime.datetime.utcnow().isoformat() + "Z",
     )
-    return
+    return resp

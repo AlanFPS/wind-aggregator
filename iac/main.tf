@@ -10,6 +10,7 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    archive = { source = "hashicorp/archive", version = ">= 2.7.1" }
   }
 }
 
@@ -21,14 +22,32 @@ provider "aws" {
   region  = var.aws_region
 }
 
-provider "archive" {}
+# ---- layer: vendored wheels ----------------------------------------------
+data "archive_file" "layer_zip" {
+  type        = "zip"
+  source_dir  = "${path.module}/../layer"
+  output_path = "${path.module}/layer.zip"
+}
+
+resource "aws_lambda_layer_version" "deps" {
+  layer_name          = "wind-agg-deps"
+  filename            = data.archive_file.layer_zip.output_path
+  source_code_hash    = data.archive_file.layer_zip.output_base64sha256
+  compatible_runtimes = ["python3.11"]
+}
 
 # ---- package Lambda --------------------------------------------------------
 data "archive_file" "lambda_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../src"
   output_path = "${path.module}/lambda.zip"
-  excludes    = ["__pycache__"]
+  excludes = [
+    "__pycache__",
+    "*.whl", "*.pyd", "*.dll",
+    "cv2*", "scipy*", "numpy*", "PIL*", "pywavelets*", "imagehash*",
+    "pydantic*", "boto3*", "botocore*", "s3transfer*",
+    "typing_*", "annotated_types*", "typing_inspection*",
+  ]
 }
 
 # ---- IAM role --------------------------------------------------------------
@@ -74,13 +93,14 @@ resource "aws_lambda_function" "agg" {
   filename      = data.archive_file.lambda_zip.output_path
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
 
-  timeout      = 60
-  memory_size  = 1024
+  # ---------- attach dependency layer ----------
+  layers        = [aws_lambda_layer_version.deps.arn]
+
+  timeout       = 60
+  memory_size   = 1024
 
   environment {
-    variables = {
-      LOG_LEVEL = "INFO"
-    }
+    variables = { LOG_LEVEL = "INFO" }
   }
 
   depends_on = [aws_iam_role_policy.lambda_policy]
