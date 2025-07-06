@@ -10,9 +10,10 @@ Thin wrapper around Amazon Rekognition DetectLabels.
     }
 """
 from typing import Dict, List, Tuple
-import boto3
-import io
+import boto3, io, re, logging
 from PIL import Image
+
+log = logging.getLogger(__name__)
 
 # Map Rekognition label names to our canonical areas
 AREA_MAP = {
@@ -23,8 +24,6 @@ AREA_MAP = {
     "Garage": "garage",
     "Door":   "garage",
 }
-
-DAMAGE_KEYWORDS = {"Damage", "Damaged", "Crack", "Broken", "Debris", "Dent"}
 
 def _pil_to_bytes(pil: Image.Image) -> bytes:
     buf = io.BytesIO()
@@ -44,18 +43,25 @@ def _severity_from_damage_conf(conf: float) -> int:
     """
     return min(4, int(conf / 20))
 
+DAMAGE_PAT = re.compile(
+    r"(damage|crack|broken|missing|tear|dent|roof damage|home damage)",
+    flags=re.I,
+)
+
 def analyze_image(pil: Image.Image, rek_client=None) -> Dict:
     if rek_client is None:
         rek_client = boto3.client("rekognition")
 
     resp = rek_client.detect_labels(Image={"Bytes": _pil_to_bytes(pil)},
                                     MaxLabels=50,
-                                    MinConfidence=50)
+                                    MinConfidence=40)
 
     labels = [(l["Name"], l["Confidence"]) for l in resp["Labels"]]
-    damage_conf = max((c for n, c in labels if n in DAMAGE_KEYWORDS), default=0)
 
-    damage = damage_conf >= 50
+    log.info("rekognition labels: %s", labels)
+
+    damage_conf = max((c for n, c in labels if DAMAGE_PAT.search(n)), default=0)
+    damage = damage_conf >= 40
     area   = _area_from_labels(labels)
     severity = _severity_from_damage_conf(damage_conf) if damage else 0
 

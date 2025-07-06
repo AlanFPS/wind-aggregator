@@ -79,14 +79,15 @@ def process_claim(req: ClaimRequest, corr_id: str) -> ClaimResponse:
         ar.rep_imgs.append(url)
         ar.quality_weights.append(info["quality"])
 
-    # confirm rule ≥2 photos with severity≥2
-    confirmed = []
+    # ---------- DAMAGE CONFIRMATION & SUMMARY ----------
     for ar in areas.values():
         high = [s for s in ar.severities if s >= 2]
-        ar.damage_confirmed = len(high) >= 2
-        ar.avg_severity = round(statistics.mean(ar.severities), 2)
-        if ar.damage_confirmed:
-            confirmed.append(ar)
+        ar.damage_confirmed = len(high) >= 1
+        ar.avg_severity     = round(statistics.mean(ar.severities), 2)
+
+    # keep every area (confirmed or not) so the UI always shows something
+    area_results = list(areas.values())
+    # ---------------------------------------------------
 
     # weighted overall severity
     numer = sum(info["severity"] * info["quality"] for info in url_to_info.values())
@@ -101,13 +102,16 @@ def process_claim(req: ClaimRequest, corr_id: str) -> ClaimResponse:
     )
 
     # confidence heuristic: proportion of kept imgs + damage confirmation count
-    confidence = round(min(1.0, 0.5 + len(confirmed) / max(1, len(areas)) * 0.5), 2)
+    confirmed_count = sum(1 for ar in area_results if ar.damage_confirmed)
+    confidence = round(
+        min(1.0, 0.5 + confirmed_count / max(1, len(area_results)) * 0.5), 2
+    )
 
     resp = ClaimResponse(
         claim_id=req.claim_id,
         source_images=src_summary,
         overall_damage_severity=overall,
-        areas=confirmed,
+        areas=area_results,
         data_gaps=["No attic photos"],   # stub – could be smarter
         confidence=confidence,
         generated_at=datetime.datetime.utcnow().isoformat() + "Z",
