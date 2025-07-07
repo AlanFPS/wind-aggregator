@@ -84,6 +84,10 @@ def process_claim(req: ClaimRequest, corr_id: str) -> ClaimResponse:
         high = [s for s in ar.severities if s >= 2]
         ar.damage_confirmed = len(high) >= 1
         ar.avg_severity     = round(statistics.mean(ar.severities), 2)
+        # choose the sharpest photo as the representative
+        if ar.rep_imgs:
+            best = max(zip(ar.quality_weights, ar.rep_imgs))[1]
+            ar.representative_images = [best]
 
     # keep every area (confirmed or not) so the UI always shows something
     area_results = list(areas.values())
